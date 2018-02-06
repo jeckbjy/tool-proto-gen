@@ -1,7 +1,7 @@
 # tool-proto-gen
 
 - 代码原出处:https://github.com/konsumer/node-protoc-plugin,在此基础上，做了一些调整，删除了一些依赖
-- 可方便快速的实现protobuf插件，主要作用：自动生成通过proto的message自动生成msgid和handler，以及自动注册
+- 可方便快速的实现protobuf插件，主要作用：将proto的message自动生成msgid和handler，以及自动注册
 - protoc-puglin.js 核心类库，封装google-protobuf为promise方便调用
 - protoc-gen-fairy是一个简单的例子，需要根据实际的项目进行调整
 
