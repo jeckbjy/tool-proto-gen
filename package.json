@@ -1,0 +1,16 @@
+{
+  "name": "tool-proto-gen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "protoc-gen-fairy",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "jeckbjy",
+  "license": "ISC",
+  "dependencies": {
+    "buffer-to-uint8array": "^1.1.0",
+    "get-stream": "^3.0.0",
+    "google-protobuf": "^3.5.0"
+  }
+}

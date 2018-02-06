@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package msg;
+
+message EchoReq
+{
+    string text = 1;
+}
+
+message EchoRsp
+{
+    string text = 2;
+}

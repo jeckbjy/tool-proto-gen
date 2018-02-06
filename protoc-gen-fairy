@@ -1,0 +1,124 @@
+#! /usr/bin/env node
+
+const plugin = require('./protoc-plugin')
+const util = require('util')
+const fs = require('fs')
+
+// gen msgid
+plugin(protos => {
+    var messages = new Array() 
+    protos.forEach(proto => {
+        proto.messageTypeList.forEach((message, m) => {
+            // console.error('msg', message.name)
+            name = message.name
+            if (name.endsWith('Req') || name.endsWith('Rsp') || name.endsWith('Msg')) {
+                file = proto.name.substring(0, proto.name.indexOf('.proto'))
+                // console.error("proto.name", proto.name, file)                          
+                messages.push({"file":file,"msg":message, "name":name, "id":0})
+            }    
+        })
+    });
+
+    loadMsgId(messages)
+    saveMsgId(messages)
+
+    var results = new Array()
+    gen_go(results, messages)
+    return results
+})
+
+const filepath = './msgid.json'
+
+function loadMsgId(messages) {
+    var maxid = 0
+    if (fs.existsSync(filepath)) {
+        msgidMap = require(filepath)
+        messages.forEach((msg)=> {
+            msgid = msgidMap[msg.name]
+            // console.log(typeof(msgid))
+            if (msgid != undefined) {
+                msg.id = msgid
+                if (msgid > maxid) {
+                    maxid = msgid
+                }
+            }
+        })
+    }
+
+    messages.forEach((msg)=>{
+        if (msg.id == 0) {
+            maxid++
+            msg.id = maxid
+        }
+    })
+
+    // 排序
+    messages.sort((a, b)=>{
+        return a.id - b.id
+    })
+}
+
+function saveMsgId(messages) {
+    // to obj
+    var obj = new Object()
+    messages.forEach((msg)=>{
+        obj[msg.name] = msg.id
+    })
+
+    // save file
+    var data =  JSON.stringify(obj)
+    fs.writeFile(filepath, data, (err)=>{
+        if (err) {
+            console.error("write msgid to file fail!")
+        }
+    })
+}
+
+function gen_go(results, messages) {
+    last_index = messages.length - 1
+    
+    // go message register
+    text = fs.readFileSync("./template/go_msg.tpl").toString()
+    if(text == null) {
+        return
+    }
+
+    var code = ""
+    messages.forEach((msg, index)=>{
+        code += util.format("    register(%d, &%s{})", msg.id, msg.name)
+        if (index != last_index) {
+            code += "\n"
+        }
+    })
+
+    text = text.replace("    ${code}", code)
+    
+    results.push({
+        name : "msg.go",
+        content:text
+    })
+
+    // go handler register
+    text = fs.readFileSync("./template/go_handler.tpl").toString()
+    if (text == null) {
+        return
+    }
+
+    code = ""
+    messages.forEach((msg, index)=>{
+        code += util.format("    register(&%s{}, on%s)", msg.name, msg.name)
+        if (index != last_index) {
+            code += "\n"
+        }
+    })
+
+    text = text.replace("    ${code}", code)
+    
+    results.push({
+        name: "handler.go",
+        content: text
+    })
+}
+
+function gen_csharp(results, messages) {
+}
