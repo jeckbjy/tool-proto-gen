@@ -7,14 +7,14 @@
 
 ## 依赖 
 
-- protoc:安装可执行文件,下载地址：https://github.com/google/protobuf/releases
 - google-protobuf：核心依赖
 - buffer-to-uint8array:将buffer转化为uint8array
 - get-stream:将stdin转化为promise
 
 ## install
 
-npm install --save
+- 安装protoc 下载地址：https://github.com/google/protobuf/releases
+- 安装node，并执行 npm install --save
 
 ## example
 
