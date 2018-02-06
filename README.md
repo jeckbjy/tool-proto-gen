@@ -19,13 +19,17 @@
 ## example
 
 - 类unix系统
- ./protoc-gen.sh 和 protoc-gen-fairy需要有可执行权限,执行./protoc-gen.sh会在build目录下生产输出文件,然后可以拷贝到项目的工程目录中
+
+  ./protoc-gen.sh 和 protoc-gen-fairy需要有可执行权限,执行./protoc-gen.sh会在build目录下生产输出文件,然后可以拷贝到项目的工程目录中
 
 - windows系统
- 需要将sh转为bat，同时还需要增加一个bat用于用node执行protoc-gen-fairy
+
+  需要将sh转为bat，同时还需要增加一个bat用于用node执行protoc-gen-fairy
 
 - 跨平台的方式:
- 可参考bin的制作：https://www.zhihu.com/question/37491557
+
+  可参考bin的制作：https://www.zhihu.com/question/37491557
 
 - 更多例子可参考:
- https://github.com/konsumer/node-protoc-plugin
+
+  https://github.com/konsumer/node-protoc-plugin
