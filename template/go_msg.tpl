@@ -14,5 +14,5 @@ func register(msgid int32, msgobj proto.Message) {
 }
 
 func init() {
-    ${code}
+    <code>register({id}, &{name})</code>
 }

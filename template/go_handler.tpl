@@ -11,5 +11,5 @@ func register(m interface{}, h interface{}) {
 }
 
 func init() {
-    ${code}
+    <code>register(&{id}, on{name})</code>
 }
