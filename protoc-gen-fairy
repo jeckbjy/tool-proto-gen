@@ -1,3 +1,14 @@
 #!/bin/bash
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 
-node ./protoc-main.js
+pushd $DIR > /dev/null
+
+if [ ! -d "node_modules" ]; then
+  npm i
+fi
+
+popd > /dev/null
+
+# 注意工作路径是是外部调用者
+node $DIR/protoc-main.js
+

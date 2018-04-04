@@ -54,7 +54,8 @@ const CodeGeneratorRequest = (stdin = process.stdin) => (
   const simplePlugin = (cb) => CodeGeneratorRequest()
     .then(r => {
       const req = r.toObject()
-      return req.protoFileList.filter(p => req.fileToGenerateList.indexOf(p.name) !== -1)
+      req.protos = req.protoFileList.filter(p => req.fileToGenerateList.indexOf(p.name) !== -1)
+      return req
     })
     .then(cb)
     .then(CodeGeneratorResponse())

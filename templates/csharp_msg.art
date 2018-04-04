@@ -20,7 +20,9 @@ namespace Proto
             }
             _init = true;
 
-            <code>register<{name}}>({id}, {name}.Parser);</code>
+            {{each messages msg}}
+            register<{{msg.name}}>({{msg.id}}, {{msg.name}}.Parser);
+            {{/each}}
         }
 
         public static MessageParser GetMessageParser(RuntimeTypeHandle typeHandle)

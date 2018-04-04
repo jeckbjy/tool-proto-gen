@@ -1,0 +1,10 @@
+// This file is generated automatically, DO NOT modify it manually!!! 
+
+var jspb = require("google-protobuf");
+var goog = jspb;
+var global = Function("return this")();
+
+// exports messages
+{{each files file}}
+goog.object.extend(exports,require("./{{file}}_pb"))
+{{/each}}

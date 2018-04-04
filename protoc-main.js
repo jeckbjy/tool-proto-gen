@@ -1,44 +1,60 @@
 const plugin = require('./protoc-plugin')
+const conf = require('./protoc-conf')
 const util = require('util')
+const path = require('path')
 const fs = require('fs')
-
-const config = [
-    {tpl_path:"go_msg.tpl", out_name:"msg.go"},
-    // {tpl_path:"go_handler.tpl", out_name:"handler.go"},
-    {tpl_path:"csharp_msg.tpl", out_name:"ProtoDic.cs"}
-]
-
-const msgid_path = './msgid.json'
+const template = require('art-template')
 
 // gen msgid
-plugin(protos => { 
-    var messages = new Array() 
-    protos.forEach(proto => {
+plugin(req => { 
+    parseOptions(req.parameter)
+    findMessages(req)
+    buildId(req)
+
+    return buildMessages(req)
+})
+
+// 解析参数
+function parseOptions(options) {
+    // find ./proto_conf.js
+    if(fs.existsSync("./proto_conf.js")) {
+        temp_conf = require("./proto_conf.js")
+        deepCopy(conf, temp_conf)
+    }
+
+    // parse options,example:csharp,go,js
+    if (options != "") {
+        tokens = options.split(',').filter(String)
+        tokens.forEach((type)=>{
+            if (conf.output.indexOf(type) == -1) {
+                conf.output.push(type)
+            }
+        })
+    }
+}
+
+function findMessages(req) {
+    var files = new Array()
+    var messages = new Array()
+    req.protos.forEach(proto => {
+        file = proto.name.slice(0, -6)
+        files.push(file)
+        // console.error(file)
         proto.messageTypeList.forEach((message, m) => {
-            // console.error('msg', message.name)
             name = message.name
             if (name.endsWith('Req') || name.endsWith('Rsp') || name.endsWith('Msg')) {
-                file = proto.name.substring(0, proto.name.indexOf('.proto'))
-                // console.error("proto.name", proto.name, file)                          
                 messages.push({"file":file,"msg":message, "name":name, "id":0})
             }    
         })
     });
 
-    loadMsgId(messages)
-    saveMsgId(messages)
+    req.files = files
+    req.messages = messages
+}
 
-    var results = new Array()
-    config.forEach((cfg)=> {
-        build(results, messages, "./template/"+cfg.tpl_path, cfg.out_name)
-    })
-
-    return results
-})
-
-function loadMsgId(messages) {
+function loadMsgId(messages, msgid_path) {
     var maxid = 0
-    if (fs.existsSync(msgid_path)) {
+    if (msgid_path != "" && fs.existsSync(msgid_path)) {
         msgidMap = require(msgid_path)
         messages.forEach((msg)=> {
             msgid = msgidMap[msg.name]
@@ -65,7 +81,7 @@ function loadMsgId(messages) {
     })
 }
 
-function saveMsgId(messages) {
+function saveMsgId(messages, msgid_path) {
     // to obj
     var obj = new Object()
     messages.forEach((msg)=>{
@@ -82,51 +98,115 @@ function saveMsgId(messages) {
 }
 
 /**
+ * 构建唯一消息id
+ * @param {*} req 
+ */
+function buildId(req) {
+    var messages = req.messages
+    if (conf.msgid_open) {
+        loadMsgId(messages, conf.msgid_path)
+        saveMsgId(messages, conf.msgid_path)
+    } else {
+        loadMsgId(messages, "")
+    }
+}
+
+/**
+ * 构建消息
+ * @param {*} options 
+ * @param {*} messages 
+ */
+function buildMessages(req) {
+    
+    var results = new Array()
+
+    conf.output.forEach((type)=> {
+        lang = conf.langs[type]
+        if(lang != undefined) {
+            build(results, req, getTemplatePath(lang.tpl), lang.out)
+        }
+    })
+
+    return results
+}
+
+/**
  * TODO: filter prefix or suffix 
  * parse template and gen code
  * @param {Array} results 
  * @param {Array} messages 
  * @param {string} tpl_path 
  * @param {string} out_name 
- * @param {function (msg)bool} filter_cb,过滤消息，只有返回true的才生成
+ * @param {function (msg)bool} filter_cb 过滤消息，只有返回true的才生成
  */
-function build(results, messages, tpl_path, out_name, filter_cb) {
+function build(results, req, tpl_path, out_name, filter_cb) {
+    if(tpl_path == "") {
+        return
+    }
+
     // example:"./template/go_msg.tpl"
-    text = fs.readFileSync(tpl_path).toString()
-    if(text == null) {
+    source = fs.readFileSync(tpl_path, 'utf-8')
+    if(source == null) {
         console.error("can open template:", tpl_path)
         return
     }
 
-    tpl = genTemplate(text)
-    if(text == null) {
-        return
+    // do filter??
+    if(filter_cb != undefined) {
+
     }
 
-    // gen code
-    const formatter = tpl.format
-    const last_index = messages.length - 1
-
-    var code = ""
-    if(filter_cb != undefined && filter_cb != null) {
-        messages.forEach((msg, index)=> {
-            if(filter_cb(msg)) {
-                code += formatter.format(msg) + "\n"
-            }
-        })
-    } else {
-        messages.forEach((msg, index)=> {
-            code += formatter.format(msg) + "\n"
-        })
-    }
-
-    //
-    var data = ""
-    data = tpl.prefix + code + tpl.suffix
+    var render = template.compile(source)
+    var data = render(req)
     results.push({
         name : out_name,
         content: data
     })
+
+    // file
+    // messages = req.messages
+
+    // // gen code
+    // const formatter = tpl.format
+    // const last_index = messages.length - 1
+
+    // var code = ""
+    // if(filter_cb != undefined && filter_cb != null) {
+    //     messages.forEach((msg, index)=> {
+    //         if(filter_cb(msg)) {
+    //             code += formatter.format(msg) + "\n"
+    //         }
+    //     })
+    // } else {
+    //     messages.forEach((msg, index)=> {
+    //         code += formatter.format(msg) + "\n"
+    //     })
+    // }
+
+    //
+    // var data = ""
+    // data = tpl.prefix + code + tpl.suffix
+    // results.push({
+    //     name : out_name,
+    //     content: data
+    // })
+}
+
+function getTemplatePath(file) {
+    // 首先查找相对本地地址
+    tpl_path = "./templates/" + file
+    if(fs.existsSync(tpl_path)) {
+        return tpl_path
+    }
+
+    tpl_path = __dirname + "/templates/" + file
+    // console.error("aaa",tpl_path)
+    if(fs.existsSync(tpl_path)) {
+        return tpl_path
+    }
+
+    console.error("can open template:", file)
+    return ""
 }
 
 /**
@@ -175,6 +255,30 @@ function genTemplate(text) {
     format = space + text.substring(tag_beg_pos + tag_beg.length, tag_end_pos)
 
     return {prefix:prefix, suffix:suffix, format:format}
+}
+
+/**
+ * 深度拷贝,用于拷贝配置信息
+ * @param {*} dst 
+ * @param {*} src 
+ */
+function deepCopy(dst, src) {
+    for (var k in src) {
+        var datas = src[k]
+        var datad = dst[k]
+
+        var types = typeof datas
+        var typed = typeof datad
+
+        // 类型不同，直接覆盖
+        if (Array.isArray(datas) && Array.isArray(datad)) {
+            dst[k] = datad.concat(datas)
+        } else if (typed === 'object' && types === 'object') {
+            deepCopy(datad, datas)
+        } else {
+            dst[k] = datas
+        }
+    }
 }
 
 /**
