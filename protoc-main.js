@@ -175,7 +175,7 @@ function build(results, req, tpl_path, out_name, filter_cb) {
         return
     }
 
-    console.error("build", tpl_path)
+    console.error("build", path.basename(tpl_path))
 
     // do filter??
     if(filter_cb != undefined) {
