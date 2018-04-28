@@ -52,6 +52,10 @@ function parseOptions(options) {
             case "msgid":
                 conf.msgid_init = parseInt(val, 10)
                 break;
+            case "msgid_open":
+                conf.msgid_open = (val=="true" || val =="1")
+                console.error(conf.msgid_open)
+                break;
             case "msgid_path":
                 conf.msgid_path = val
                 break;
