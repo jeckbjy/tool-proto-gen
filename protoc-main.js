@@ -22,12 +22,35 @@ function parseOptions(options) {
         deepCopy(conf, temp_conf)
     }
 
-    // parse options,example:csharp,go,js
+    // parse options
+    // example:cs,go,js
+    // "type=cs,go,js;msgid=1000"
+    // console.error(options)
     if (options != "") {
-        tokens = options.split(',').filter(String)
-        tokens.forEach((type)=>{
-            if (conf.output.indexOf(type) == -1) {
-                conf.output.push(type)
+        tokens = options.split(';').filter(String)
+        tokens.forEach((data)=>{
+            // console.error("opt", data)
+            var key, val
+            var index = data.indexOf('=')
+            if(index != -1) {
+                key = data.substring(0, index).trim()
+                val = data.substring(index+1).trim()
+            } else {
+                key = "type"
+                val = data
+            }
+            // console.error("data",key, val)
+            switch (key) {
+            case "type":
+                types = val.split(',').filter(String)
+                types.forEach((type)=>{
+                    if(conf.output.indexOf(type) == -1) {
+                        conf.output.push(type)
+                    }
+                })
+                break;
+            case "msgid":
+                conf.msgid_init = parseInt(val, 10)
             }
         })
     }
@@ -53,7 +76,7 @@ function findMessages(req) {
 }
 
 function loadMsgId(messages, msgid_path) {
-    var maxid = 0
+    var maxid = conf.msgid_init
     if (msgid_path != "" && fs.existsSync(msgid_path)) {
         msgidMap = require(msgid_path)
         messages.forEach((msg)=> {
@@ -122,6 +145,7 @@ function buildMessages(req) {
 
     conf.output.forEach((type)=> {
         lang = conf.langs[type]
+        // console.error("lang", lang)
         if(lang != undefined) {
             build(results, req, getTemplatePath(lang.tpl), lang.out)
         }
@@ -151,6 +175,8 @@ function build(results, req, tpl_path, out_name, filter_cb) {
         return
     }
 
+    console.error("build", tpl_path)
+
     // do filter??
     if(filter_cb != undefined) {
 
@@ -162,34 +188,6 @@ function build(results, req, tpl_path, out_name, filter_cb) {
         name : out_name,
         content: data
     })
-
-    // file
-    // messages = req.messages
-
-    // // gen code
-    // const formatter = tpl.format
-    // const last_index = messages.length - 1
-
-    // var code = ""
-    // if(filter_cb != undefined && filter_cb != null) {
-    //     messages.forEach((msg, index)=> {
-    //         if(filter_cb(msg)) {
-    //             code += formatter.format(msg) + "\n"
-    //         }
-    //     })
-    // } else {
-    //     messages.forEach((msg, index)=> {
-    //         code += formatter.format(msg) + "\n"
-    //     })
-    // }
-
-    //
-    // var data = ""
-    // data = tpl.prefix + code + tpl.suffix
-    // results.push({
-    //     name : out_name,
-    //     content: data
-    // })
 }
 
 function getTemplatePath(file) {
