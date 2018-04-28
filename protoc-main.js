@@ -54,7 +54,7 @@ function parseOptions(options) {
                 break;
             case "msgid_open":
                 conf.msgid_open = (val=="true" || val =="1")
-                console.error(conf.msgid_open)
+                // console.error(conf.msgid_open)
                 break;
             case "msgid_path":
                 conf.msgid_path = val
