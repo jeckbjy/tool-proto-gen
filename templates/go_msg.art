@@ -10,7 +10,7 @@ func register(msgid int32, msgobj proto.Message) {
 }
 
 const (
-    {{each messages msg}}MsgId_{{msg.name}} = {{msg.id}},
+    {{each messages msg}}MsgId_{{msg.name}} = {{msg.id}}
     {{/each}}
 )
 

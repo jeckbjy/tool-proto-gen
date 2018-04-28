@@ -51,6 +51,10 @@ function parseOptions(options) {
                 break;
             case "msgid":
                 conf.msgid_init = parseInt(val, 10)
+                break;
+            case "msgid_path":
+                conf.msgid_path = val
+                break;
             }
         })
     }
