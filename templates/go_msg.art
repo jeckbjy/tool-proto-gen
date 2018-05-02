@@ -5,16 +5,12 @@ import (
     "github.com/golang/protobuf/proto"
 )
 
-func register(msgid int32, msgobj proto.Message) {
-    fairy.RegisterMessage(msgobj, uint(msgid))
-}
-
 const (
     {{each messages msg}}MsgId_{{msg.name}} = {{msg.id}}
     {{/each}}
 )
 
 func init() {
-    {{each messages msg}}register(MsgId_{{msg.name}}, &{{msg.name}}{})
+    {{each messages msg}}fairy.RegisterMessage(&{{msg.name}}{}, MsgId_{{msg.name}})
     {{/each}}
 }
